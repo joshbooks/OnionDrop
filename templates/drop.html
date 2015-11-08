@@ -1,0 +1,28 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% import "bootstrap/fixes.html" as fixes %}
+
+{% import "bootstrap/utils.html" as util %}
+{% block navbar %}
+{{nav.mynavbar.render()}}
+{% endblock %}
+{% block content %}
+
+{{util.flashed_messages(dismissible=True)}}
+
+<div class="container">
+
+  <h1>Drop Message</h1>
+
+
+
+  {{ wtf.quick_form(form, action='/newmsg', method='post', button_map={'submit_button': 'primary'}) }}
+</div>
+{% endblock %}
+
+{% block head %}
+{{super()}}
+{{fixes.ie8()}}
+{% endblock %}

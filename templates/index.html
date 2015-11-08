@@ -1,0 +1,42 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% import "bootstrap/fixes.html" as fixes %}
+
+{% import "bootstrap/utils.html" as util %}
+
+
+{% block navbar %}
+{{nav.mynavbar.render()}}
+{% endblock %}
+
+
+{% block content %}
+
+{{util.flashed_messages(dismissible=True)}}
+
+<div class="container">
+
+  <h2>Would you like to drop a message?</h2>
+  {{ wtf.quick_form(form1, method='GET', action='/drop/', button_map={'submit_button': 'primary'}) }}
+</div>
+<div class="container">
+
+  <h2>Or maybe pick up a message?</h2>
+  {{ wtf.quick_form(form2, method='POST', button_map={'submit_button': 'primary'}) }}
+
+
+
+</div>
+<div class="container">
+
+  <h2>Or maybe you want the About page</h2>
+  {{ wtf.quick_form(form3, method='get', action='/about/', button_map={'submit_button': 'primary'}) }}
+</div>
+{% endblock %}
+
+{% block head %}
+{{super()}}
+{{fixes.ie8()}}
+{% endblock %}

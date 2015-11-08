@@ -1,0 +1,121 @@
+{% extends "bootstrap/base.html" %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% import "bootstrap/fixes.html" as fixes %}
+
+{% import "bootstrap/utils.html" as util %}
+{% block navbar %}
+{{nav.mynavbar.render()}}
+{% endblock %}
+
+{% block content %}
+
+{{util.flashed_messages(dismissible=True)}}
+
+<div class="container">
+<h1>Table of Contents</h1>
+<a name="toc"></a>
+<a href="#general">General Information</a>
+<a href="#faq">FAQ</a>
+<a href="#tech">Technical Details</a>
+</div>
+<div class="container">
+
+<a name="general"></a>
+  <h1>A little about us</h1>
+  <h2>What do we do?</h2>
+This site is an attempt to connect hidden service providers
+with each other and the people who use their services.<br>
+To communicate people can "drop" messages to a hidden
+service provider, who can then pick up messages at their leisure
+  <h2>How do I drop a message?</h2>
+There are two ways to drop a message, you can either encrypt
+the message yourself or trust us to encrypt it for you.<br>
+But either way you go to our /drop/ page and enter the .onion
+address and your encrypted or plain text and press the big
+button at the bottom.<br>
+A word of warning though, any encrypted text in the message
+will result in the message being stored unencrypted.
+  <h2>How do I pick up messages?</h2>
+You go to the main page, enter the .onion address of the hidden
+service whose message you want to download and press the "Pickup"
+button.<br>
+This links you to the download for a .tar.gz of all
+messages that hidden service has ever received<br>
+If you're the hidden service operator you can then decrypt the
+messages with the private key for your hidden service.
+  <h2>Why do we do it?</h2>
+The traditional problem has been that hosting a hidden service
+is meant to be deniable and anonymous, while most ways of communicating
+are not.<br>
+However there are many cases in which it would be quite nice to be
+able to communicate an important piece of information to a hidden
+service (bug reports, warnings of impending doom, etc.)<br>
+To that end this site aims to provide a channel of communication
+with and between hidden services that is as anonymous and deniable
+as hosting a hidden service.
+</div>
+<div class="container">
+
+<a name="faq"></a>
+<h1>FAQ</h1>
+<h2>How is it secure if anyone can download messages?</h2>
+The Tor network uses strong RSA encryption, and by using the
+same keys to encrypt messages we ensure that those messages
+are exactly as secure as the rest of the hidden service's
+communications.
+<h2>OK, but why on earth would you do that?</h2>
+The service this site provides is modeled on a dead drop, 
+which provides two parties with a channel
+of communication that they can deny having ever taken
+part in. What it means to a hidden service is, if you
+connect through Tor and not a clearweb portal, there
+is no proof that you ever received any messages. What
+it means for people dropping messages is, if connecting
+through Tor, there is no proof that you dropped any messages.
+<h2>But wait, I need the hidden service to know who I am</h2>
+You can do the same thing you do in emails, 
+sign your message before you drop it.
+<h2>I have a question that wasn't answered here</h2>
+Then I would advise you to contact the provider of this
+hidden service, if only there were a way to do that...
+</div>
+<div class="container">
+
+<a name="tech"></a>
+<h1>Technical Details</h1>
+<h2>API</h2>
+For ease of use this site has a simple API to pick up messages and
+ask for a hidden service's public key. <br>
+To pick up messages for a hidden
+service the address is:<br>/(hidden service domain).onion/<br>
+To get the public key for a hidden service the address is:<br>
+/key/(hidden service domain).onion/<br>
+<h2>Encrypting/Decrypting</h2>
+The messages are encrypted using standard RSA, so on linux you can use openssl rsautl -(en|de)crypt -raw<br>
+The -raw is important.
+<h2>Source Code</h2>
+Source code will be made available and I will link to
+it here, but as of this very moment it is not available, please check back later
+<h2>I want to hack your site, thoughts?</h2>
+Hackers welcome, I appreciate any tips or bugs you might
+want to bring to my attention.<br>
+A couple of things to save you some time and heartache:<br>
+The contents of the s3 bucket that stores the message packs can be listed by anyone, 
+so I'd appreciate if you didn't fuzz it to find out the contents.<br>
+Everything is hosted on AWS, if you find any vulnerabilities there you
+can do much better than this little site.<br>
+Database inputs are properly sanitized, but don't take my word for it ;)<br>
+Finally though, do feel free to hack this site, but please do it well.
+I'm happy to find out that someone posted "Close port *** you stupid doofball" on the main page
+(especially if they also left a bug report) but finding out that
+some script kiddie used up 2GB of bandwidth because he thinks port scans 
+are t3h l337 H4x makes me not happy.
+</div>
+{% endblock %}
+
+{% block head %}
+{{super()}}
+{{fixes.ie8()}}
+{% endblock %}
