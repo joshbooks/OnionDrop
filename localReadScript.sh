@@ -1,4 +1,12 @@
 #! /bin/bash
+#This script looks through the system for all directories
+#containing the filenames "hostname" and "private_key"
+#and checks if you have the message packs that correspond
+#with any of those hidden service directories and if
+#so decrypts them and and displays them immediately
+#so they are never written to file as plaintext
+#the script must be run as root, so I would advise
+#against running it on a production server
 if [[ `whoami` != "root" ]]
 then
 	echo "this script should be run as root"
