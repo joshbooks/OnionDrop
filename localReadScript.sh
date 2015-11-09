@@ -5,15 +5,8 @@
 #with any of those hidden service directories and if
 #so decrypts them and and displays them immediately
 #so they are never written to file as plaintext
-#the script must be run as root, so I would advise
-#against running it on a production server
-if [[ `whoami` != "root" ]]
-then
-	echo "this script should be run as root"
-	exit
-fi
 
-read -ra prelim <<< `find / -path */hostname`
+read -ra prelim <<< `find / -path */hostname 2> /dev/null`
 for i in ${prelim[@]}
 do
 	if [[ -e "`dirname $i`/private_key" ]]
@@ -38,7 +31,7 @@ done
 
 for i in ${hosts[@]}
 do
-	path=$(find / -path "*$host.tar.gz" )
+	path=$(find / -path "*$host.tar.gz"  2> /dev/null)
 	tar -xzf $path
 	mkdir -p $host
 	read -ra files <<< $(tar -tzf $path)

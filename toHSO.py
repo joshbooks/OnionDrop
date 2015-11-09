@@ -42,7 +42,8 @@ from flask_nav.elements import Navbar, View
 
 
 #TODO change to flask-appconfig
-from Config import get_awsAccessKey, get_awsSecretKey, get_dbName, get_dbUser, get_dbPW, get_dbAddr, get_dbPort, get_hidden_svc_dir
+from Config import get_awsAccessKey, get_awsSecretKey, get_dbName, get_dbUser, get_dbPW, get_dbAddr, get_dbPort, get_hidden_svc_dir, get_devKey
+
 from forms import DropForm, GoDrop, GetPack, GetAbout
 
 #TODO now that I've debugged the database connection stuff pretty
@@ -71,6 +72,7 @@ try:
 except Exception as e:
 	print e
 	print "tor is not letting us authenticate, is it configured correctly and running?" 
+	exit()
 
 print "successfully opened control connection to tor"
 
@@ -89,11 +91,8 @@ port = 5000
 host = "127.0.0.1"
 
 #begin bootstrap/appconfig bit
-AppConfig(app, None)#configFile arg is deprecated
+#AppConfig(app, None)#configFile arg is deprecated
 Bootstrap(app)
-
-#This should most assuredly change
-app.config['SECRET_KEY'] = 'devkey'
 
 #begin database bit
 conn = psycopg2.connect("host = %s port = %s dbname=%s user=%s password = %s"%(get_dbAddr(), get_dbPort(), get_dbName(), get_dbUser(), get_dbPW()))
@@ -113,8 +112,6 @@ def mynavbar():
         'OnionDrop',
         View('Home', 'index')
     )
-
-# ...
 
 nav.init_app(app)
 
@@ -202,6 +199,7 @@ def packUp():
 		#get all rows in the message database for this onion
 		rows = cur.fetchall()
 
+		#write them all to file and add them to the .tmp.tar.gz
 		for row in rows:
 			print row
 			thisName = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(14))
@@ -218,7 +216,6 @@ def packUp():
 		#here it might make sense to keep this if the way it is, or it might make more
 		#sense to change it to an exception/error/log event inside an if not
 		if key is not None:
-		#if os.path.exists('msgpacks/'+hs+".tar.gz"):
 			old = tarfile.open('msgpacks/'+hs+".tar.gz", mode='r:gz')
 			old.extractall()
 			for member in old.getmembers():
@@ -237,9 +234,7 @@ def packUp():
 		#Otherwise I'm moderately proud of this lazy atomicity
 		if os.path.isfile("msgpacks/"+hs+".tar.gz"):
 			os.remove("msgpacks/"+hs+".tar.gz")
-
-		#I'm not sure if it makes any sense to rename it back to tar.gz
-		#it depends on how s3 deals with replacing files		
+		
 		os.rename("msgpacks/"+hs+".tmp.tar.gz", "msgpacks/"+hs+".tar.gz")
 
 		#I am going to do the thing I hate to do, here is the upload code
@@ -259,35 +254,62 @@ def packUp():
 		if key is None:
 			key = botoMsgs.new_key(key_name="msgpacks/"+hs+".tar.gz")
 
-		print "about to attempt to upload to s3"
-	
 		key.set_contents_from_filename("msgpacks/"+hs+".tar.gz")
 
 		os.remove("msgpacks/"+hs+".tar.gz")
 
-		print "now exiting the packUp loop"
 
 cron.add_job(packUp, 'interval', minutes=30, max_instances=1)
 
+#amazon's linux distro automatically logrotates
+#which causes tor to get a hup signal, so this will
+#definitely be good to run every day, but 
+def checkTor():
+	if not controller.isAlive():
+		print "tor controller was dead, now trying to restart it"
+		try:
+			controller = Controller.from_port()
+			controller.authenticate()
+		except Exception as e:
+			print e
+			print "tor is not letting us authenticate, is it configured correctly and running?" 
+			exit()
+
+		print "successfully opened control connection to tor"
+#TODO here and elsewhere we should change from the get_conf/set_options
+#interface to the create_ephemeral_hidden_service/
+#remove_ephemeral_hidden_service/list_ephemeral_hidden_services
+#that way we can also put the key and hostname in config and not have to
+#worry about setting up /var/lib/tor/hidden_service
+
+	if controller.get_conf("HiddenServiceDir") is None:
+		print "tor was not configure to provide a hidden service, now configuring"
+		try:
+			controller.set_options([
+			("HiddenServiceDir", get_hidden_svc_dir()),
+			("HiddenServicePort", "80 %s:%s" % (host, str(port)))
+			])
+		except Exception as e:
+			print "unable to create hidden service"
+			print e
+			quit()
+
+cron.add_job(checkTor, 'interval', minutes=30, max_instances=1)
 
 #########################
 ##Define Response Pages##
 #########################
 
-#This could also be a static page
 def index():
 	if request.method == 'GET':
 		return render_template('index.html', form1=GoDrop(), form2=GetPack(), form3=GetAbout())
 
 	hs = request.form['field1']
 
-	#TODO validators should handle this
-	#so I hould be able to get rid of this little kludge
+	#TODO validators should handle this for our page
+	#but raw post could still mess with us here
 	if (hs is None) or (hs == ""):
 		return "<h1>please enter all required fields</h1>"
-
-	#if re.match("\w+.onion/", hs):
-		#hs = hs[:hs.len()-1]
 
 	if not (re.match("\w+\.onion", hs)):
 		if re.match("http://", hs):
@@ -400,15 +422,19 @@ def retKey(hs):
 
 	if result:
 		psk = result[0]
+		print "got key from database"
 
 	if not result:
+		print "couldn't get key from database"
 		desc = 'bogus'
 
 		try:
+			print "about to get hidden service descriptor"
 			desc = controller.get_hidden_service_descriptor(hs)
 		except Exception as e:
 			print e
 			desc = 'bogus'
+		print "finished getting hidden service descriptor one way or another"
 
 		if desc == 'bogus':
 			return "<h1>we couldn't get the hidden service descriptor for the hidden service "+hs+"</h1>"
@@ -469,9 +495,13 @@ try:
 except Exception as e:
 	print "unable to create hidden service"
 	print e
-	#quit()
+	quit()
 
 print "about to start flask"
+
+
+app.config['SECRET_KEY'] = get_devKey()
+
 
 #never enable on a production server
 #app.debug = True
