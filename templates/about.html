@@ -31,7 +31,11 @@ To communicate people can "drop" messages to a hidden
 service provider, who can then pick up messages at their leisure
   <h2>How do I drop a message?</h2>
 There are two ways to drop a message, you can either encrypt
-the message yourself or trust us to encrypt it for you.<br>
+the message yourself or trust the server to encrypt it for you.<br>
+Strange as it may sound, I would vastly prefer you not trust
+the server and instead use 
+<a href='https://github.com/joshbooks/OnionDrop/blob/master/enscrypt_noVerify.sh'>this script</a>
+ and/or my fancy /key api(described in tech section) to encrypt your message locally.<br>
 But either way you go to our /drop/ page and enter the .onion
 address and your encrypted or plain text and press the big
 button at the bottom.<br>
@@ -44,7 +48,12 @@ button.<br>
 This links you to the download for a .tar.gz of all
 messages that hidden service has ever received<br>
 If you're the hidden service operator you can then decrypt the
-messages with the private key for your hidden service.
+messages with the private key for your hidden service.<br>
+To make things a little easier for hidden service providers,
+there is 
+<a href='https://github.com/joshbooks/OnionDrop/blob/master/localReadScript.sh'>this script</a>
+to help make reading messages a little easier, as well as another api
+described in the tech section.
   <h2>Why do we do it?</h2>
 The traditional problem has been that hosting a hidden service
 is meant to be deniable and anonymous, while most ways of communicating
@@ -96,7 +105,7 @@ To get the public key for a hidden service the address is:<br>
 The messages are encrypted using standard RSA, so on linux you can use openssl rsautl -(en|de)crypt -raw<br>
 The -raw is important.
 <h2>Source Code</h2>
-Source code and a helpful script for message unpacking and viewing can be found at:<br>
+Source code and a few helpful scripts can be found at:<br>
 https://github.com/joshbooks/OnionDrop
 <h2>I want to hack your site, thoughts?</h2>
 Hackers welcome, I appreciate any tips or bugs you might
@@ -109,7 +118,7 @@ can do much better than this little site.<br>
 Database inputs are properly sanitized, but don't take my word for it ;)<br>
 Finally though, do feel free to hack this site, but please do it well.
 I'm happy to find out that someone posted "Close port *** you stupid doofball" on the main page
-(especially if they also left a bug report) but finding out that
+(especially if they also left a bug report) but finding out
 some script kiddie used up 2GB of bandwidth because he thinks port scans 
 are t3h l337 H4x makes me not happy.
 </div>

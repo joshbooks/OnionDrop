@@ -466,7 +466,7 @@ app.add_url_rule("/key/<hs>/", 'retKey', retKey)
 def msgPage(hs):
 
 	if (hs is None) or (hs == ''):
-		return "It looks like you have discovered a unicode issue with flask, not with this site though :)"
+		return "It looks like you are doing something very strange, I hope it's fun"
 
 	if not (re.match("\w+\.onion", hs)):
 		if re.match("\w+", hs):
