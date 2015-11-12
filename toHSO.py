@@ -184,7 +184,7 @@ def packUp():
 		#check here or in the very beginning of the if block to see
 		#if there are any ongoing processes or just generally to see
 		#if there's some reason not to download right now
-		key = botoMsgs.get_key(hs+".tar.gz")
+		key = botoMsgs.get_key("msgpacks/"+hs+".tar.gz")
 		if key is not None:
 			#to do this asynchronously set the res_download_handler argument
 			key.get_contents_to_filename('msgpacks/'+hs+".tar.gz")
@@ -306,7 +306,7 @@ def index():
 
 	hs = request.form['field1']
 
-	#TODO validators should handle this for our page
+	#validators should handle this for our page
 	#but raw post could still mess with us here
 	if (hs is None) or (hs == ""):
 		return "<h1>please enter all required fields</h1>"
@@ -322,7 +322,8 @@ def index():
 			if re.match("\w+", hs):
 				hs=hs+".onion"
 			else:
-				return "<h1>"+hs+" is not a valid .onion url, try again</h1>"
+				return '<meta HTTP-EQUIV="REFRESH" content="5; url=/"><h1>"+hs+" is not a valid .onion url, try again</h1>You will be redirected to the homepage in 5 seconds'
+
 
 	key = botoMsgs.get_key("msgpacks/"+hs+".tar.gz")
 	if key is None:
@@ -359,6 +360,8 @@ def sitOn():
 			hs = hs[7:]
 		if re.match("https://", hs):
 			hs = hs[8:]
+		if re.match("\w+.onion/", hs):
+			hs = hs[:-1]
 		if not (re.match("\w+\.onion", hs)):
 			if re.match("\w+", hs):
 				hs=hs+".onion"
@@ -410,11 +413,19 @@ def sitOn():
 app.add_url_rule("/newmsg", 'sitOn', sitOn, methods=["POST"])
 
 def retKey(hs):
+	
 	if not (re.match("\w+\.onion", hs)):
-		if re.match("\w+", hs):
-			hs=hs+".onion"
+		if re.match("http://", hs):
+			hs = hs[7:]
+		if re.match("https://", hs):
+			hs = hs[8:]
+		if re.match("\w+.onion/", hs):
+			hs = hs[:-1]
+		if not (re.match("\w+\.onion", hs)):
+			if re.match("\w+", hs):
+				hs=hs+".onion"
 		else:
-			return "<h1>"+hs+" is not a valid .onion url, try again</h1>"
+			return '<meta HTTP-EQUIV="REFRESH" content="5; url=/"><h1>"+hs+" is not a valid .onion url, try again</h1>You will be redirected to the homepage in 5 seconds'
 
 	cur.execute("SELECT key FROM keys WHERE onion = %s", (hs,))
 	result = cur.fetchone()
@@ -434,14 +445,11 @@ def retKey(hs):
 		except Exception as e:
 			print e
 			desc = 'bogus'
-		print "finished getting hidden service descriptor one way or another"
-
+		print "successfully got hidden service descriptor"
 		if desc == 'bogus':
 			return "<h1>we couldn't get the hidden service descriptor for the hidden service "+hs+"</h1>"
 
-		print desc
 		psk = str(desc.permanent_key)
-		print psk
 		
 		cur.execute("INSERT INTO keys (onion, key) VALUES(%s, %s);", (hs, psycopg2.Binary(psk)))
 		conn.commit()
