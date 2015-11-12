@@ -16,10 +16,12 @@ host=$1
 if [[ ! -e `which openssl` ]]
 then
   echo "openssl must be installed for this script to work"
+  exit
 fi
 if [[ ! -e `which curl` ]]
 then
   echo "curl must be installed for this script to work"
+  exit
 fi
 
 curl -L --socks5-hostname localhost:9050 "oniondropodx6dyg.onion/key/$host" > ./"$host.tmp.pem"
