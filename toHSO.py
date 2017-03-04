@@ -472,7 +472,7 @@ def msgPage(hs):
 		if re.match("\w+", hs):
 			hs=hs+".onion"
 		else:
-			return "<h1>"+hs+" is not a valid .onion url, try again</h1>"
+			return "<h1>You specified an invalid .onion url, try again</h1>"
 
 	#check if the msgpack exists in our msgpacks bucket
 	key = botoMsgs.get_key("msgpacks/"+hs+".tar.gz")
