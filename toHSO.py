@@ -367,6 +367,9 @@ def sitOn():
 				hs=hs+".onion"
 			else:
 				return '<meta HTTP-EQUIV="REFRESH" content="5; url=/"><h1>"+hs+" is not a valid .onion url, try again</h1>You will be redirected to the homepage in 5 seconds'
+			
+	if msg.len() gt 128:
+		return '<h1>That message was over 128 chars, cryptoman says no</h1>'
 
 
 	#TODO more rigorous way of determining whether or not message is already encrypted
